@@ -28,24 +28,28 @@ public class RealEstateUnivocityParserExample {
 
 		com.univocity.parsers.html.Main.runLicenseManager();
 
-		HtmlEntityList entityList = step1GetSearchResultLinks(); // just lists the links in the first page of results
+		// Lists the links in the first page of results.
+		HtmlEntityList entityList = step1GetSearchResultLinks();
 
-//		HtmlEntityList entityList = step2AddPagination(); // lists the links on 3 pages of results
+		// Lists the links on 3 pages of results.
+//		HtmlEntityList entityList = step2AddPagination();
 
-//		HtmlEntityList entityList = step3FollowTheLinks(); // visits each link of each page and lists the data collected from them
+		// Visits each link of each page and lists the data collected from them.
+//		HtmlEntityList entityList = step3FollowTheLinks();
 
-//		HtmlEntityList entityList = step4SavePagesLocally(); // will download HTML and resources into a "realEstate" folder in your Downloads dir in the FIRST RUN only. Run it multiple times and it will NOT visit a second time.
-
+		// Will download HTML and resources into a "realEstate" folder in your Downloads dir in the FIRST RUN only. Run it multiple times and it will NOT visit a second time.
+//		HtmlEntityList entityList = step4SavePagesLocally();
 
 		String url = "https://harcourts.co.za/Property/Residential?search=&location={LOCATION_CODE}&proptype=&min=&max=&minbed=&maxbed=&formsearch=true&page=1";
 
-		UrlReaderProvider search = new UrlReaderProvider(url);
-		HtmlParser parser = new HtmlParser(entityList);
+		UrlReaderProvider urlReaderProvider = new UrlReaderProvider(url);
+		HtmlParser htmlParser = new HtmlParser(entityList);
 
-		search.getRequest().setUrlParameter("LOCATION_CODE", locationCode);
-		HtmlParserResult result = parser.parse(search).get("houses");
+		urlReaderProvider.getRequest().setUrlParameter("LOCATION_CODE", locationCode);
 
-		for (String[] row : result.getRows()) {
+		HtmlParserResult htmlParserResult = htmlParser.parse(urlReaderProvider).get("houses");
+
+		for (String[] row : htmlParserResult.getRows()) {
 			System.out.println(Arrays.toString(row));
 		}
 	}
@@ -54,7 +58,7 @@ public class RealEstateUnivocityParserExample {
 	 * Returns the links of all properties in the first page of results.
 	 */
 	public static HtmlEntityList step1GetSearchResultLinks() {
-		//the first step is to create a list of entities
+		// The first step is to create a list of entities.
 		HtmlEntityList entityList = new HtmlEntityList();
 
 		// Configure the "houses" entity. It handles the search results that list all houses available.
