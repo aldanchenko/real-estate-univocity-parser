@@ -57,7 +57,7 @@ public class RealEstateUnivocityParserExample {
 	/**
 	 * Returns the links of all properties in the first page of results.
 	 */
-	public static HtmlEntityList step1GetSearchResultLinks() {
+	private static HtmlEntityList step1GetSearchResultLinks() {
 		// The first step is to create a list of entities.
 		HtmlEntityList entityList = new HtmlEntityList();
 
@@ -76,7 +76,7 @@ public class RealEstateUnivocityParserExample {
 	/**
 	 * Returns the links of all properties in 3 pages of results.
 	 */
-	public static HtmlEntityList step2AddPagination() {
+	private static HtmlEntityList step2AddPagination() {
 		//Configure parser to fetch CSS and javascript files to make downloaded pages look nice
 		//the first step is to create a list of entities
 		HtmlEntityList entityList = new HtmlEntityList();
@@ -106,7 +106,7 @@ public class RealEstateUnivocityParserExample {
 	/**
 	 * Follows the links of all properties and captures their data.
 	 */
-	public static HtmlEntityList step3FollowTheLinks() {
+	private static HtmlEntityList step3FollowTheLinks() {
 		//Configure parser to fetch CSS and javascript files to make downloaded pages look nice
 		//the first step is to create a list of entities
 		HtmlEntityList entityList = new HtmlEntityList();
@@ -152,7 +152,7 @@ public class RealEstateUnivocityParserExample {
 		return entityList;
 	}
 
-	public static HtmlEntityList step4SavePagesLocally() {
+	private static HtmlEntityList step4SavePagesLocally() {
 		/* THIS IS NEW - CONFIGURE PARSER TO FETCH PAGE RESOURCES **/
 		//Configure parser to fetch CSS and javascript files to make downloaded pages look nice
 		FetchOptions options = new FetchOptions();
