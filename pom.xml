@@ -23,6 +23,8 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<univocity-html-parser.version>2.1.1</univocity-html-parser.version>
+		<jsoup.version>1.8.3</jsoup.version>
 	</properties>
 
 	<repositories>
@@ -36,7 +38,12 @@
         <dependency>
 		    <groupId>com.univocity</groupId>
 		    <artifactId>univocity-html-parser</artifactId>
-		    <version>2.1.1</version>
+		    <version>${univocity-html-parser.version}</version>
 	    </dependency>
+		<dependency>
+			<groupId>org.jsoup</groupId>
+			<artifactId>jsoup</artifactId>
+			<version>${jsoup.version}</version>
+		</dependency>
 	</dependencies>
 </project>
