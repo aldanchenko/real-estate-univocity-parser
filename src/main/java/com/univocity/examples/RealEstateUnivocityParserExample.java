@@ -29,10 +29,10 @@ public class RealEstateUnivocityParserExample {
 		com.univocity.parsers.html.Main.runLicenseManager();
 
 		// Lists the links in the first page of results.
-		HtmlEntityList entityList = step1GetSearchResultLinks();
+		//HtmlEntityList entityList = step1GetSearchResultLinks();
 
 		// Lists the links on 3 pages of results.
-//		HtmlEntityList entityList = step2AddPagination();
+		HtmlEntityList entityList = step2AddPagination();
 
 		// Visits each link of each page and lists the data collected from them.
 //		HtmlEntityList entityList = step3FollowTheLinks();
@@ -77,17 +77,17 @@ public class RealEstateUnivocityParserExample {
 	 * Returns the links of all properties in 3 pages of results.
 	 */
 	private static HtmlEntityList step2AddPagination() {
-		//Configure parser to fetch CSS and javascript files to make downloaded pages look nice
-		//the first step is to create a list of entities
+		// Configure parser to fetch CSS and javascript files to make downloaded pages look nice
+		// the first step is to create a list of entities
 		HtmlEntityList entityList = new HtmlEntityList();
 
 		/* ADDING PAGINATOR HERE **/
 		// Configure the paginator. It finds the link that points to the next page of results
-		HtmlPaginator paginator = entityList.getPaginator();
-		paginator.setNextPage().match("li").classes("pagerNext").matchFirst("a").getAttribute("href");
+		HtmlPaginator htmlPaginator = entityList.getPaginator();
+		htmlPaginator.setNextPage().match("li").classes("pagerNext").matchFirst("a").getAttribute("href");
 
 		// Makes the pagination run to up to 2 additional pages of results
-		paginator.setFollowCount(2);
+		htmlPaginator.setFollowCount(2);
 
 		/* THE REST OF THE CODE IS AS IT WAS BEFORE **/
 
