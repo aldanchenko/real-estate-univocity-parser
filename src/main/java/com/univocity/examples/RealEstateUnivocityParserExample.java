@@ -32,10 +32,10 @@ public class RealEstateUnivocityParserExample {
 		//HtmlEntityList entityList = step1GetSearchResultLinks();
 
 		// Lists the links on 3 pages of results.
-		HtmlEntityList entityList = step2AddPagination();
+		//HtmlEntityList entityList = step2AddPagination();
 
 		// Visits each link of each page and lists the data collected from them.
-//		HtmlEntityList entityList = step3FollowTheLinks();
+		HtmlEntityList entityList = step3FollowTheLinks();
 
 		// Will download HTML and resources into a "realEstate" folder in your Downloads dir in the FIRST RUN only. Run it multiple times and it will NOT visit a second time.
 //		HtmlEntityList entityList = step4SavePagesLocally();
