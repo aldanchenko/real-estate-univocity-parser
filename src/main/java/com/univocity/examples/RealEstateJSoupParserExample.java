@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * DEMONSTRATES HOW YOU CAN CONFIGURE THE PARSER, STEP BY STEP.
+ * DEMONSTRATES HOW TO PARSE SITE VIA JSOUP LIBRARY, STEP BY STEP.
  *
  * Runs against this Real Estate website: https://harcourts.co.za/
  */
@@ -66,6 +66,10 @@ public class RealEstateJSoupParserExample {
 
 	/**
 	 * Returns the links of all properties in the first page of results.
+	 *
+	 * @param htmlDocument - source JSoup HTML document
+	 *
+	 * @return List<String>
 	 */
 	private static List<String> step1GetSearchResultLinks(Document htmlDocument) {
 		Elements linkElements = htmlDocument.select("div#galleryView > ul > li > div.listingContent > h2 > a");
@@ -81,6 +85,12 @@ public class RealEstateJSoupParserExample {
 
 	/**
 	 * Returns the links of all properties in 3 pages of results.
+	 *
+	 * @param htmlDocument - source JSoup HTML document
+	 *
+	 * @throws IOException -
+	 *
+	 * @return List<String>
 	 */
 	private static List<String> step2AddPagination(Document htmlDocument) throws IOException {
 		Elements linkElements = htmlDocument.select("div#galleryView > ul > li > div.listingContent > h2 > a");
@@ -111,6 +121,12 @@ public class RealEstateJSoupParserExample {
 
 	/**
 	 * Follows the links of all properties and captures their data.
+	 *
+	 * @param htmlDocument - source JSoup HTML document
+	 *
+	 * @throws IOException -
+	 *
+	 * @return List<String>
 	 */
 	private static List<String> step3FollowTheLinks(Document htmlDocument) throws IOException {
 		Elements linkElements = htmlDocument.select("div#galleryView > ul > li > div.listingContent > h2 > a");

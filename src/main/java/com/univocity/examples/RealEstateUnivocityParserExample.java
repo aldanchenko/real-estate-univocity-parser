@@ -11,6 +11,7 @@ import com.univocity.api.entity.html.builders.*;
 import com.univocity.api.net.*;
 import com.univocity.parsers.common.*;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -20,6 +21,13 @@ import java.util.*;
  */
 public class RealEstateUnivocityParserExample {
 
+	/**
+	 * Entry point to application.
+	 *
+	 * @param args			- console arguments
+	 *
+	 * @throws IOException -
+	 */
 	public static void main(String... args) {
 		String locationCode = "22008";
 
@@ -56,6 +64,8 @@ public class RealEstateUnivocityParserExample {
 
 	/**
 	 * Returns the links of all properties in the first page of results.
+	 *
+	 * @return HtmlEntityList
 	 */
 	private static HtmlEntityList step1GetSearchResultLinks() {
 		// The first step is to create a list of entities.
@@ -75,6 +85,8 @@ public class RealEstateUnivocityParserExample {
 
 	/**
 	 * Returns the links of all properties in 3 pages of results.
+	 *
+	 * @return HtmlEntityList
 	 */
 	private static HtmlEntityList step2AddPagination() {
 		// Configure parser to fetch CSS and javascript files to make downloaded pages look nice
@@ -105,6 +117,8 @@ public class RealEstateUnivocityParserExample {
 
 	/**
 	 * Follows the links of all properties and captures their data.
+	 *
+	 * @return HtmlEntityList
 	 */
 	private static HtmlEntityList step3FollowTheLinks() {
 		//Configure parser to fetch CSS and javascript files to make downloaded pages look nice
@@ -152,31 +166,36 @@ public class RealEstateUnivocityParserExample {
 		return entityList;
 	}
 
+	/**
+	 * Save HTML pages on local computer in 'Download' directory.
+	 *
+	 * @return HtmlEntityList
+	 */
 	private static HtmlEntityList step4SavePagesLocally() {
 		/* THIS IS NEW - CONFIGURE PARSER TO FETCH PAGE RESOURCES **/
-		//Configure parser to fetch CSS and javascript files to make downloaded pages look nice
+		// Configure parser to fetch CSS and javascript files to make downloaded pages look nice
 		FetchOptions options = new FetchOptions();
 		options.setSharedResourceDir("{user.home}/cache");
-		//skip images otherwise it will download a lot of photos of each house.
+		// Skip images otherwise it will download a lot of photos of each house.
 		options.setDownloadHandler(context -> {
 			if ("jpg".equals(context.targetFileExtension())) {
 				context.skipDownload();
 			}
 		});
 
-		//the first step is to create a list of entities
+		// The first step is to create a list of entities.
 		HtmlEntityList entityList = new HtmlEntityList();
 
 		/* HERE WE CONFIGURE THE PARSER TO FETCH PAGE RESOURCES **/
 
-		//the parser config applies to all entities of the list, let's configure the parser.
+		// The parser config applies to all entities of the list, let's configure the parser.
 		HtmlParserSettings parserSettings = entityList.getParserSettings();
 
-		//here we configure the parser to fetch resources according to the FetchOptions set above.
-		//AFTER the files are downloaded, the parser will run against the stored files.
+		// Here we configure the parser to fetch resources according to the FetchOptions set above.
+		// AFTER the files are downloaded, the parser will run against the stored files.
 		entityList.getParserSettings().fetchResourcesBeforeParsing(options);
 
-		/* store everything under the `Downloads` folder in your home dir **/
+		/* Store everything under the `Downloads` folder in your home dir **/
 		parserSettings.setDownloadContentDirectory("{user.home}/Downloads/realEstate/");
 
 		/* CONFIGURE PARSER TO STORE HTML OF EACH PAGE OF RESULTS - where the links are listed **/
@@ -223,12 +242,12 @@ public class RealEstateUnivocityParserExample {
 		houseDetails.addField("address").match("h2").classes("detailAddress").getText();
 		houseDetails.addField("price").match("h3").id("listingViewDisplayPrice").getText();
 
-		// creates a path to the "features" section of the page
+		// Creates a path to the "features" section of the page.
 		PartialPath info = houseDetails.newPath().match("ul").id("detailFeatures");
 		info.addField("bedrooms").match("li").classes("bdrm").matchNext("span").getText();
 		info.addField("bathrooms").match("li").classes("bthrm").matchNext("span").getText();
 
-		// creates a path to the "property information" section of the page
+		// Creates a path to the "property information" section of the page.
 		info = houseDetails.newPath().match("div").classes("property-information").match("li").matchNext("span").classes("heading");
 		info.addField("landSize").matchCurrent().withText("Land size").getFollowingText();
 		info.addField("propertyType").matchCurrent().withText("Property type").getFollowingText();
