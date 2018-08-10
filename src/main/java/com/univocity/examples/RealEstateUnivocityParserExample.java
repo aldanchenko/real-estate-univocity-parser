@@ -35,10 +35,10 @@ public class RealEstateUnivocityParserExample {
 		//HtmlEntityList entityList = step2AddPagination();
 
 		// Visits each link of each page and lists the data collected from them.
-		HtmlEntityList entityList = step3FollowTheLinks();
+		//HtmlEntityList entityList = step3FollowTheLinks();
 
 		// Will download HTML and resources into a "realEstate" folder in your Downloads dir in the FIRST RUN only. Run it multiple times and it will NOT visit a second time.
-//		HtmlEntityList entityList = step4SavePagesLocally();
+		HtmlEntityList entityList = step4SavePagesLocally();
 
 		String url = "https://harcourts.co.za/Property/Residential?search=&location={LOCATION_CODE}&proptype=&min=&max=&minbed=&maxbed=&formsearch=true&page=1";
 
