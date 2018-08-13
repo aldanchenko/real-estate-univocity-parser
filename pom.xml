@@ -23,7 +23,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<univocity-html-parser.version>2.1.1</univocity-html-parser.version>
+		<univocity-html-parser.version>2.2.0</univocity-html-parser.version>
 		<jsoup.version>1.8.3</jsoup.version>
 	</properties>
 
