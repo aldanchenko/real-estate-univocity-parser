@@ -12,7 +12,6 @@ import com.univocity.api.net.*;
 import com.univocity.parsers.common.*;
 
 import java.io.IOException;
-import java.util.*;
 
 /**
  * DEMONSTRATES HOW YOU CAN CONFIGURE THE PARSER, STEP BY STEP.
@@ -56,10 +55,7 @@ public class RealEstateUnivocityParserExample {
 		urlReaderProvider.getRequest().setUrlParameter("LOCATION_CODE", locationCode);
 
 		HtmlParserResult htmlParserResult = htmlParser.parse(urlReaderProvider).get("houses");
-
-		for (String[] row : htmlParserResult.getRows()) {
-			System.out.println(Arrays.toString(row));
-		}
+		CsvResultHelper.saveResults(htmlParserResult);
 	}
 
 	/**

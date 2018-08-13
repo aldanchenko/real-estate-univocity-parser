@@ -6,20 +6,22 @@
 
 package com.univocity.examples;
 
-import org.jsoup.Connection;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+
+import org.jsoup.Connection;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 /**
  * DEMONSTRATES HOW TO PARSE SITE VIA JSOUP LIBRARY, STEP BY STEP.
@@ -32,6 +34,8 @@ public class RealEstateJSoupParserExample {
 	 * Basic site URL.
 	 */
 	private static final String HARCOURTS_CO_ZA_URL = "https://harcourts.co.za";
+	
+	private static List<Map<String, String>> results = new ArrayList<>();
 
 	/**
 	 * Entry point to application.
@@ -57,11 +61,9 @@ public class RealEstateJSoupParserExample {
 		//List<String> informationStrings = step3FollowTheLinks(mainHtmlDocument);
 
 		// Will download HTML and resources into a "realEstate" folder in your Downloads dir in the FIRST RUN only. Run it multiple times and it will NOT visit a second time.
-		List<String> informationStrings = step4SavePagesLocally(url, locationCode);
+		step4SavePagesLocally(url, locationCode);
 
-		for (String link : informationStrings) {
-			System.out.println(link);
-		}
+		CsvResultHelper.saveResults("jsoup-houses", results);
 	}
 
 	/**
@@ -92,7 +94,7 @@ public class RealEstateJSoupParserExample {
 	 *
 	 * @return List<String>
 	 */
-	private static List<String> step2AddPagination(Document htmlDocument) throws IOException {
+	private static void step2AddPagination(Document htmlDocument) throws IOException {
 		Elements linkElements = htmlDocument.select("div#galleryView > ul > li > div.listingContent > h2 > a");
 
 		List<String> links = new ArrayList<>();
@@ -115,8 +117,6 @@ public class RealEstateJSoupParserExample {
 				links.add(linkElement.attr("href"));
 			}
 		}
-
-		return links;
 	}
 
 	/**
@@ -134,53 +134,7 @@ public class RealEstateJSoupParserExample {
 		List<String> pagesInfos = new ArrayList<>();
 
 		for (Element linkElement : linkElements) {
-			String detailPageLink = linkElement.attr("href");
-
-			Document detailPageDocument = Jsoup.connect(HARCOURTS_CO_ZA_URL + detailPageLink).get();
-
-			Element listingNumberElement = detailPageDocument.select("div.listingInfo > span > strong:contains(Listing Number:)").first();
-			String listingNumber = listingNumberElement.parent().text();
-
-			Element addressElement = detailPageDocument.select("div#listingDetail > div#detailTitle > h2.detailAddress").first();
-			String address = addressElement.text();
-
-			Element priceElement = detailPageDocument.select("div#listingDetail > div#detailTitle > div.propFeatures h3#listingViewDisplayPrice").first();
-			String price = priceElement.text();
-
-			Element bedroomsElement = detailPageDocument.select("div#listingDetail > div#detailTitle > div.propFeatures > ul#detailFeatures > li.bdrm > span").first();
-			String bedroomsNumber = "";
-
-			if (Objects.nonNull(bedroomsElement)) {
-				bedroomsNumber = bedroomsElement.text();
-			}
-
-			Element bathroomsElement = detailPageDocument.select("div#listingDetail > div#detailTitle > div.propFeatures > ul#detailFeatures > li.bthrm > span").first();
-			String bathroomsNumber = "";
-
-			if (Objects.nonNull(bathroomsElement)) {
-				bathroomsNumber = bathroomsElement.text();
-			}
-
-			Element landSizeElement = detailPageDocument.select("div.property-information > ul > li > span:contains(Land Size:)").first();
-			String landSize = "";
-
-			if (Objects.nonNull(landSizeElement)) {
-				landSize = landSizeElement.parent().text();
-			}
-
-			Element propertyTypeElement = detailPageDocument.select("div.property-information > ul > li > span:contains(Property Type:)").first();
-			String propertyType = propertyTypeElement.parent().text();
-
-			String listingInfoString = detailPageLink + "," +
-					listingNumber + "," +
-					address + "," +
-					price + "," +
-					bedroomsNumber + "," +
-					bathroomsNumber + "," +
-					landSize + "," +
-					propertyType + ",";
-
-			pagesInfos.add(listingInfoString);
+			saveDetails(linkElement);
 		}
 
 		Elements pageLinkElements = htmlDocument.select("div#pager > ul > li.pagerCount > a");
@@ -194,54 +148,7 @@ public class RealEstateJSoupParserExample {
 			linkElements = nextPageDocument.select("div#galleryView > ul > li > div.listingContent > h2 > a");
 
 			for (Element linkElement : linkElements) {
-				String detailPageLink = linkElement.attr("href");
-
-
-				Document detailPageDocument = Jsoup.connect(HARCOURTS_CO_ZA_URL + detailPageLink).get();
-
-				Element listingNumberElement = detailPageDocument.select("div.listingInfo > span > strong:contains(Listing Number:)").first();
-				String listingNumber = listingNumberElement.parent().text();
-
-				Element addressElement = detailPageDocument.select("div#listingDetail > div#detailTitle > h2.detailAddress").first();
-				String address = addressElement.text();
-
-				Element priceElement = detailPageDocument.select("div#listingDetail > div#detailTitle > div.propFeatures h3#listingViewDisplayPrice").first();
-				String price = priceElement.text();
-
-				Element bedroomsElement = detailPageDocument.select("div#listingDetail > div#detailTitle > div.propFeatures > ul#detailFeatures > li.bdrm > span").first();
-				String bedroomsNumber = "";
-
-				if (Objects.nonNull(bedroomsElement)) {
-					bedroomsNumber = bedroomsElement.text();
-				}
-
-				Element bathroomsElement = detailPageDocument.select("div#listingDetail > div#detailTitle > div.propFeatures > ul#detailFeatures > li.bthrm > span").first();
-				String bathroomsNumber = "";
-
-				if (Objects.nonNull(bathroomsElement)) {
-					bathroomsNumber = bathroomsElement.text();
-				}
-
-				Element landSizeElement = detailPageDocument.select("div.property-information > ul > li > span:contains(Land Size:)").first();
-				String landSize = "";
-
-				if (Objects.nonNull(landSizeElement)) {
-					landSize = landSizeElement.parent().text();
-				}
-
-				Element propertyTypeElement = detailPageDocument.select("div.property-information > ul > li > span:contains(Property Type:)").first();
-				String propertyType = propertyTypeElement.parent().text();
-
-				String listingInfoString = detailPageLink + "," +
-						listingNumber + "," +
-						address + "," +
-						price + "," +
-						bedroomsNumber + "," +
-						bathroomsNumber + "," +
-						landSize + "," +
-						propertyType + ",";
-
-				pagesInfos.add(listingInfoString);
+				saveDetails(linkElement);
 			}
 		}
 
@@ -258,7 +165,7 @@ public class RealEstateJSoupParserExample {
 	 *
 	 * @return List<String>
 	 */
-	private static List<String> step4SavePagesLocally(String url, String locationCode) throws IOException {
+	private static void step4SavePagesLocally(String url, String locationCode) throws IOException {
 		final Connection.Response response = Jsoup.connect(url).execute();
 		final Document htmlDocument = response.parse();
 
@@ -276,7 +183,7 @@ public class RealEstateJSoupParserExample {
 		File currentDayDirectory = new File(realEstateJsoupDirectory, currentDateStr);
 
 		if (currentDayDirectory.exists()) {
-			return new ArrayList<>();
+			return;
 		}
 
 		currentDayDirectory.mkdirs();
@@ -288,59 +195,8 @@ public class RealEstateJSoupParserExample {
 
 		Elements linkElements = htmlDocument.select("div#galleryView > ul > li > div.listingContent > h2 > a");
 
-		List<String> pagesInfos = new ArrayList<>();
-
 		for (Element linkElement : linkElements) {
-			String detailPageLink = linkElement.attr("href");
-
-			Document detailPageDocument = Jsoup.connect(HARCOURTS_CO_ZA_URL + detailPageLink).get();
-
-			Element listingNumberElement = detailPageDocument.select("div.listingInfo > span > strong:contains(Listing Number:)").first();
-			String listingNumber = listingNumberElement.parent().text();
-
-			Element addressElement = detailPageDocument.select("div#listingDetail > div#detailTitle > h2.detailAddress").first();
-			String address = addressElement.text();
-
-			Element priceElement = detailPageDocument.select("div#listingDetail > div#detailTitle > div.propFeatures h3#listingViewDisplayPrice").first();
-			String price = priceElement.text();
-
-			Element bedroomsElement = detailPageDocument.select("div#listingDetail > div#detailTitle > div.propFeatures > ul#detailFeatures > li.bdrm > span").first();
-			String bedroomsNumber = "";
-
-			if (Objects.nonNull(bedroomsElement)) {
-				bedroomsNumber = bedroomsElement.text();
-			}
-
-			Element bathroomsElement = detailPageDocument.select("div#listingDetail > div#detailTitle > div.propFeatures > ul#detailFeatures > li.bthrm > span").first();
-			String bathroomsNumber = "";
-
-			if (Objects.nonNull(bathroomsElement)) {
-				bathroomsNumber = bathroomsElement.text();
-			}
-
-			Element landSizeElement = detailPageDocument.select("div.property-information > ul > li > span:contains(Land Size:)").first();
-			String landSize = "";
-
-			if (Objects.nonNull(landSizeElement)) {
-				landSize = landSizeElement.parent().text();
-			}
-
-			Element propertyTypeElement = detailPageDocument.select("div.property-information > ul > li > span:contains(Property Type:)").first();
-			String propertyType = propertyTypeElement.parent().text();
-
-			String listingInfoString = detailPageLink + "," +
-					listingNumber + "," +
-					address + "," +
-					price + "," +
-					bedroomsNumber + "," +
-					bathroomsNumber + "," +
-					landSize + "," +
-					propertyType + ",";
-
-			pagesInfos.add(listingInfoString);
-
-			String listingFileName = listingNumber.replaceAll("Listing Number: ", "").trim() + ".html";
-			saveHtmlFile(firstPageResultsDirectory, listingFileName, detailPageDocument);
+			saveDetails(firstPageResultsDirectory, linkElement);
 		}
 
 		Elements pageLinkElements = htmlDocument.select("div#pager > ul > li.pagerCount > a");
@@ -361,61 +217,89 @@ public class RealEstateJSoupParserExample {
 			linkElements = nextPageDocument.select("div#galleryView > ul > li > div.listingContent > h2 > a");
 
 			for (Element linkElement : linkElements) {
-				String detailPageLink = linkElement.attr("href");
-
-
-				Document detailPageDocument = Jsoup.connect(HARCOURTS_CO_ZA_URL + detailPageLink).get();
-
-				Element listingNumberElement = detailPageDocument.select("div.listingInfo > span > strong:contains(Listing Number:)").first();
-				String listingNumber = listingNumberElement.parent().text();
-
-				Element addressElement = detailPageDocument.select("div#listingDetail > div#detailTitle > h2.detailAddress").first();
-				String address = addressElement.text();
-
-				Element priceElement = detailPageDocument.select("div#listingDetail > div#detailTitle > div.propFeatures h3#listingViewDisplayPrice").first();
-				String price = priceElement.text();
-
-				Element bedroomsElement = detailPageDocument.select("div#listingDetail > div#detailTitle > div.propFeatures > ul#detailFeatures > li.bdrm > span").first();
-				String bedroomsNumber = "";
-
-				if (Objects.nonNull(bedroomsElement)) {
-					bedroomsNumber = bedroomsElement.text();
-				}
-
-				Element bathroomsElement = detailPageDocument.select("div#listingDetail > div#detailTitle > div.propFeatures > ul#detailFeatures > li.bthrm > span").first();
-				String bathroomsNumber = "";
-
-				if (Objects.nonNull(bathroomsElement)) {
-					bathroomsNumber = bathroomsElement.text();
-				}
-
-				Element landSizeElement = detailPageDocument.select("div.property-information > ul > li > span:contains(Land Size:)").first();
-				String landSize = "";
-
-				if (Objects.nonNull(landSizeElement)) {
-					landSize = landSizeElement.parent().text();
-				}
-
-				Element propertyTypeElement = detailPageDocument.select("div.property-information > ul > li > span:contains(Property Type:)").first();
-				String propertyType = propertyTypeElement.parent().text();
-
-				String listingInfoString = detailPageLink + "," +
-						listingNumber + "," +
-						address + "," +
-						price + "," +
-						bedroomsNumber + "," +
-						bathroomsNumber + "," +
-						landSize + "," +
-						propertyType + ",";
-
-				pagesInfos.add(listingInfoString);
-
-				String listingFileName = listingNumber.replaceAll("Listing Number: ", "").trim() + ".html";
-				saveHtmlFile(pageResultsDirectory, listingFileName, detailPageDocument);
+				saveDetails(pageResultsDirectory, linkElement);
 			}
 		}
+	}
 
-		return pagesInfos;
+	private static void saveDetails(Element linkElement) throws IOException {
+		saveDetails(null, linkElement);
+	}
+	
+	private static void saveDetails(File pageResultsDirectory, Element linkElement) throws IOException {
+		String detailPageLink = linkElement.attr("href");
+
+		Document detailPageDocument = Jsoup.connect(HARCOURTS_CO_ZA_URL + detailPageLink).get();
+
+		Element listingNumberElement = detailPageDocument.select("div.listingInfo > span > strong:contains(Listing Number:)").first();
+		String listingNumber = listingNumberElement.parent().text();
+
+		Element addressElement = detailPageDocument.select("div#listingDetail > div#detailTitle > h2.detailAddress").first();
+		String address = addressElement.text();
+
+		Element priceElement = detailPageDocument.select("div#listingDetail > div#detailTitle > div.propFeatures h3#listingViewDisplayPrice").first();
+		String price = priceElement.text();
+
+		Element bedroomsElement = detailPageDocument.select("div#listingDetail > div#detailTitle > div.propFeatures > ul#detailFeatures > li.bdrm > span").first();
+		String bedroomsNumber = "";
+
+		if (Objects.nonNull(bedroomsElement)) {
+			bedroomsNumber = bedroomsElement.text();
+		}
+
+		Element bathroomsElement = detailPageDocument.select("div#listingDetail > div#detailTitle > div.propFeatures > ul#detailFeatures > li.bthrm > span").first();
+		String bathroomsNumber = "";
+
+		if (Objects.nonNull(bathroomsElement)) {
+			bathroomsNumber = bathroomsElement.text();
+		}
+
+		Element landSizeElement = detailPageDocument.select("div.property-information > ul > li > span:contains(Land Size:)").first();
+		String landSize = "";
+
+		if (Objects.nonNull(landSizeElement)) {
+			landSize = landSizeElement.parent().text();
+		}
+
+		Element propertyTypeElement = detailPageDocument.select("div.property-information > ul > li > span:contains(Property Type:)").first();
+		String propertyType = propertyTypeElement.parent().text();
+
+		
+		Map<String, String> record = null;
+		record = addToRecord(record, "propertyDetailsLink", detailPageLink);
+		record = addToRecord(record, "id", listingNumber);
+		record = addToRecord(record, "address", address);
+		record = addToRecord(record, "price", price);
+		record = addToRecord(record, "bedrooms", bedroomsNumber);
+		record = addToRecord(record, "bathrooms", bathroomsNumber);
+		record = addToRecord(record, "landSize", landSize);
+		record = addToRecord(record, "propertyType", propertyType);
+
+		if(pageResultsDirectory != null) {
+			String listingFileName = listingNumber.replaceAll("Listing Number: ", "").trim() + ".html";
+			saveHtmlFile(pageResultsDirectory, listingFileName, detailPageDocument);
+		}
+	}
+
+	/**
+	 * If record parameter is null or empty method will crate it and put new parameter to map.
+	 *
+	 * @param record    -   source map with values
+	 * @param key       -   key name
+	 * @param value     -   value object
+	 *
+	 * @return Map<String, String>
+	 */
+	private static Map<String, String> addToRecord(Map<String, String> record, String key, String value) {
+		if (Objects.isNull(record) || record.containsKey(key)) {
+			record = new LinkedHashMap<>();
+
+			results.add(record);
+		}
+
+		record.put(key, value);
+
+		return record;
 	}
 
 	/**
