@@ -24,19 +24,22 @@ class CsvResultHelper {
 	 * @param results	 - results map
 	 */
 	static void saveResults(String parserName, List<Map<String, String>> results) {
-		File resultFile = new File(System.getProperty("user.home") + "/Downloads/" + parserName + ".csv");
+		File resultCsvFile = new File(System.getProperty("user.home") + "/Downloads/" + parserName + ".csv");
 
-		System.out.println(parserName + " captured " + results.size() + " records. Results saved to " + resultFile.getAbsolutePath());
+		System.out.println(parserName + " captured " + results.size() + " records. Results saved to " + resultCsvFile.getAbsolutePath());
 
-		CsvWriterSettings settings = Csv.writeExcel();
-		settings.setHeaders(results.get(0).keySet().toArray(new String[0]));
-		settings.setHeaderWritingEnabled(true);
-		settings.setNullValue("N/A");
-		CsvWriter writer = new CsvWriter(resultFile, "windows-1252", settings);
+		CsvWriterSettings csvWriterSettings = Csv.writeExcel();
+		csvWriterSettings.setHeaders(results.get(0).keySet().toArray(new String[0]));
+		csvWriterSettings.setHeaderWritingEnabled(true);
+		csvWriterSettings.setNullValue("N/A");
+
+		CsvWriter csvWriter = new CsvWriter(resultCsvFile, "windows-1252", csvWriterSettings);
+
 		for (Map<String, String> record : results) {
-			writer.writeRow(record);
+			csvWriter.writeRow(record);
 		}
-		writer.close();
+
+		csvWriter.close();
 	}
 
 	/**

@@ -34,7 +34,10 @@ public class RealEstateJSoupParserExample {
 	 * Basic site URL.
 	 */
 	private static final String HARCOURTS_CO_ZA_URL = "https://harcourts.co.za";
-	
+
+	/**
+	 * Contains results of parsing. To save data in CSV file.
+	 */
 	private static List<Map<String, String>> results = new ArrayList<>();
 
 	/**
@@ -52,16 +55,16 @@ public class RealEstateJSoupParserExample {
 		Document mainHtmlDocument = Jsoup.connect(url).get();
 
 		// Lists the links in the first page of results.
-		//List<String> informationStrings = step1GetSearchResultLinks(htmlDocument);
+		//step1GetSearchResultLinks(mainHtmlDocument);
 
 		// Lists the links on 3 pages of results.
-		//List<String> informationStrings = step2AddPagination(htmlDocument);
+		//step2AddPagination(mainHtmlDocument);
 
 		// Visits each link of each page and lists the data collected from them.
-		//List<String> informationStrings = step3FollowTheLinks(mainHtmlDocument);
+		step3FollowTheLinks(mainHtmlDocument);
 
 		// Will download HTML and resources into a "realEstate" folder in your Downloads dir in the FIRST RUN only. Run it multiple times and it will NOT visit a second time.
-		step4SavePagesLocally(url, locationCode);
+		//step4SavePagesLocally(url, locationCode);
 
 		CsvResultHelper.saveResults("jsoup-houses", results);
 	}
@@ -162,8 +165,6 @@ public class RealEstateJSoupParserExample {
 	 * @param locationCode 	- location code
 	 *
 	 * @throws IOException -
-	 *
-	 * @return List<String>
 	 */
 	private static void step4SavePagesLocally(String url, String locationCode) throws IOException {
 		final Connection.Response response = Jsoup.connect(url).execute();
@@ -222,17 +223,32 @@ public class RealEstateJSoupParserExample {
 		}
 	}
 
+	/**
+	 * Parse HTML elements to Map.
+	 *
+	 * @param linkElement			- details page link element
+	 *
+	 * @throws IOException -
+	 */
 	private static void saveDetails(Element linkElement) throws IOException {
 		saveDetails(null, linkElement);
 	}
-	
+
+	/**
+	 * Parse HTML elements to Map.
+	 *
+	 * @param pageResultsDirectory  - source page results directory
+	 * @param linkElement			- details page link element
+	 *
+	 * @throws IOException -
+	 */
 	private static void saveDetails(File pageResultsDirectory, Element linkElement) throws IOException {
 		String detailPageLink = linkElement.attr("href");
 
 		Document detailPageDocument = Jsoup.connect(HARCOURTS_CO_ZA_URL + detailPageLink).get();
 
 		Element listingNumberElement = detailPageDocument.select("div.listingInfo > span > strong:contains(Listing Number:)").first();
-		String listingNumber = listingNumberElement.parent().text();
+		String listingNumber = listingNumberElement.parent().textNodes().get(1).text();
 
 		Element addressElement = detailPageDocument.select("div#listingDetail > div#detailTitle > h2.detailAddress").first();
 		String address = addressElement.text();
@@ -258,14 +274,14 @@ public class RealEstateJSoupParserExample {
 		String landSize = "";
 
 		if (Objects.nonNull(landSizeElement)) {
-			landSize = landSizeElement.parent().text();
+			landSize = landSizeElement.parent().textNodes().get(1).text();
 		}
 
 		Element propertyTypeElement = detailPageDocument.select("div.property-information > ul > li > span:contains(Property Type:)").first();
-		String propertyType = propertyTypeElement.parent().text();
+		String propertyType = propertyTypeElement.parent().textNodes().get(1).text();
 
-		
 		Map<String, String> record = null;
+
 		record = addToRecord(record, "propertyDetailsLink", detailPageLink);
 		record = addToRecord(record, "id", listingNumber);
 		record = addToRecord(record, "address", address);
@@ -275,8 +291,9 @@ public class RealEstateJSoupParserExample {
 		record = addToRecord(record, "landSize", landSize);
 		record = addToRecord(record, "propertyType", propertyType);
 
-		if(pageResultsDirectory != null) {
+		if (pageResultsDirectory != null) {
 			String listingFileName = listingNumber.replaceAll("Listing Number: ", "").trim() + ".html";
+
 			saveHtmlFile(pageResultsDirectory, listingFileName, detailPageDocument);
 		}
 	}
