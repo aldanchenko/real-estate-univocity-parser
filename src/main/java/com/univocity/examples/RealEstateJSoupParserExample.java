@@ -61,10 +61,10 @@ public class RealEstateJSoupParserExample {
 		//step2AddPagination(mainHtmlDocument);
 
 		// Visits each link of each page and lists the data collected from them.
-		step3FollowTheLinks(mainHtmlDocument);
+		//step3FollowTheLinks(mainHtmlDocument);
 
 		// Will download HTML and resources into a "realEstate" folder in your Downloads dir in the FIRST RUN only. Run it multiple times and it will NOT visit a second time.
-		//step4SavePagesLocally(url, locationCode);
+		step4SavePagesLocally(url, locationCode);
 
 		CsvResultHelper.saveResults("jsoup-houses", results);
 	}
@@ -137,7 +137,7 @@ public class RealEstateJSoupParserExample {
 		List<String> pagesInfos = new ArrayList<>();
 
 		for (Element linkElement : linkElements) {
-			saveDetails(linkElement);
+			saveDetailPageInformation(linkElement);
 		}
 
 		Elements pageLinkElements = htmlDocument.select("div#pager > ul > li.pagerCount > a");
@@ -151,7 +151,7 @@ public class RealEstateJSoupParserExample {
 			linkElements = nextPageDocument.select("div#galleryView > ul > li > div.listingContent > h2 > a");
 
 			for (Element linkElement : linkElements) {
-				saveDetails(linkElement);
+				saveDetailPageInformation(linkElement);
 			}
 		}
 
@@ -167,9 +167,6 @@ public class RealEstateJSoupParserExample {
 	 * @throws IOException -
 	 */
 	private static void step4SavePagesLocally(String url, String locationCode) throws IOException {
-		final Connection.Response response = Jsoup.connect(url).execute();
-		final Document htmlDocument = response.parse();
-
 		File downloadsDirectory = new File(System.getProperty("user.home"), "Downloads");
 		File realEstateJsoupDirectory = new File(downloadsDirectory, "realEstate_Jsoup");
 
@@ -183,21 +180,34 @@ public class RealEstateJSoupParserExample {
 
 		File currentDayDirectory = new File(realEstateJsoupDirectory, currentDateStr);
 
-		if (currentDayDirectory.exists()) {
-			return;
+		if (!currentDayDirectory.exists()) {
+			currentDayDirectory.mkdirs();
 		}
 
-		currentDayDirectory.mkdirs();
+		File firstPageFile = new File(currentDayDirectory, locationCode + "_0001.html");
 
-		saveHtmlFile(currentDayDirectory, locationCode + "_0001.html", htmlDocument);
+		Document htmlDocument;
+
+		if (firstPageFile.exists()) {
+			htmlDocument = Jsoup.parse(firstPageFile, "UTF-8", url);
+		} else {
+			Connection.Response response = Jsoup.connect(url).execute();
+
+			htmlDocument = response.parse();
+
+			saveHtmlPageToFile(firstPageFile, htmlDocument);
+		}
 
 		File firstPageResultsDirectory = new File(currentDayDirectory, locationCode + "_0001");
-		firstPageResultsDirectory.mkdirs();
 
-		Elements linkElements = htmlDocument.select("div#galleryView > ul > li > div.listingContent > h2 > a");
+		if (!firstPageResultsDirectory.exists()) {
+			firstPageResultsDirectory.mkdirs();
+		}
 
-		for (Element linkElement : linkElements) {
-			saveDetails(firstPageResultsDirectory, linkElement);
+		Elements detailPagesLinkElements = htmlDocument.select("div#galleryView > ul > li > div.listingContent > h2 > a");
+
+		for (Element detailPageLinkElement : detailPagesLinkElements) {
+			saveDetailPageInformation(firstPageResultsDirectory, detailPageLinkElement);
 		}
 
 		Elements pageLinkElements = htmlDocument.select("div#pager > ul > li.pagerCount > a");
@@ -206,19 +216,32 @@ public class RealEstateJSoupParserExample {
 		for (int pageIndex = 0; pageIndex < 2; pageIndex++) {
 			String nextPageLink = pageLinkElements.get(pageIndex).attr("href");
 
-			Document nextPageDocument = Jsoup.connect(HARCOURTS_CO_ZA_URL + nextPageLink).get();
-
 			int directoryIndex = pageIndex + 2;
 
-			saveHtmlFile(currentDayDirectory, locationCode + "_000" + directoryIndex + ".html", nextPageDocument);
+			File pageResultsFile = new File(currentDayDirectory, locationCode + "_000" + directoryIndex + ".html");
+
+			String nextPageUrl = HARCOURTS_CO_ZA_URL + nextPageLink;
+
+			Document nextPageDocument;
+
+			if (pageResultsFile.exists()) {
+				nextPageDocument = Jsoup.parse(pageResultsFile, "UTF-8", nextPageUrl);
+			} else {
+				nextPageDocument = Jsoup.connect(nextPageUrl).get();
+
+				saveHtmlPageToFile(pageResultsFile, nextPageDocument);
+			}
 
 			File pageResultsDirectory = new File(currentDayDirectory, locationCode + "_000" + directoryIndex);
-			pageResultsDirectory.mkdirs();
 
-			linkElements = nextPageDocument.select("div#galleryView > ul > li > div.listingContent > h2 > a");
+			if (!pageResultsDirectory.exists()) {
+				pageResultsDirectory.mkdirs();
+			}
 
-			for (Element linkElement : linkElements) {
-				saveDetails(pageResultsDirectory, linkElement);
+			detailPagesLinkElements = nextPageDocument.select("div#galleryView > ul > li > div.listingContent > h2 > a");
+
+			for (Element linkElement : detailPagesLinkElements) {
+				saveDetailPageInformation(pageResultsDirectory, linkElement);
 			}
 		}
 	}
@@ -230,8 +253,8 @@ public class RealEstateJSoupParserExample {
 	 *
 	 * @throws IOException -
 	 */
-	private static void saveDetails(Element linkElement) throws IOException {
-		saveDetails(null, linkElement);
+	private static void saveDetailPageInformation(Element linkElement) throws IOException {
+		saveDetailPageInformation(null, linkElement);
 	}
 
 	/**
@@ -242,10 +265,20 @@ public class RealEstateJSoupParserExample {
 	 *
 	 * @throws IOException -
 	 */
-	private static void saveDetails(File pageResultsDirectory, Element linkElement) throws IOException {
+	private static void saveDetailPageInformation(File pageResultsDirectory, Element linkElement) throws IOException {
 		String detailPageLink = linkElement.attr("href");
 
-		Document detailPageDocument = Jsoup.connect(HARCOURTS_CO_ZA_URL + detailPageLink).get();
+		String detailPageListingNumberFromUrl = parserListingNumberFromUrl(detailPageLink);
+
+		File detailPageHtmlFile = new File(pageResultsDirectory, detailPageListingNumberFromUrl);
+
+		Document detailPageDocument;
+
+		if (detailPageHtmlFile.exists()) {
+			detailPageDocument = Jsoup.parse(detailPageHtmlFile, "UTF-8", detailPageLink);
+		} else {
+			detailPageDocument = Jsoup.connect(HARCOURTS_CO_ZA_URL + detailPageLink).get();
+		}
 
 		Element listingNumberElement = detailPageDocument.select("div.listingInfo > span > strong:contains(Listing Number:)").first();
 		String listingNumber = listingNumberElement.parent().textNodes().get(1).text();
@@ -291,11 +324,26 @@ public class RealEstateJSoupParserExample {
 		record = addToRecord(record, "landSize", landSize);
 		record = addToRecord(record, "propertyType", propertyType);
 
-		if (pageResultsDirectory != null) {
-			String listingFileName = listingNumber.replaceAll("Listing Number: ", "").trim() + ".html";
-
-			saveHtmlFile(pageResultsDirectory, listingFileName, detailPageDocument);
+		if (!detailPageHtmlFile.exists()) {
+			saveHtmlPageToFile(pageResultsDirectory, detailPageListingNumberFromUrl, detailPageDocument);
 		}
+	}
+
+	/**
+	 * Parser Listing number from URL string.
+	 *
+	 * @param detailPageLink - source URL string
+	 *
+	 * @return String
+	 */
+	private static String parserListingNumberFromUrl(String detailPageLink) {
+		int lastSlashIndex = detailPageLink.lastIndexOf('/');
+
+		String detailPageListingNumber = detailPageLink.substring(0, lastSlashIndex);
+
+		lastSlashIndex = detailPageListingNumber.lastIndexOf('/');
+
+		return detailPageLink.substring(lastSlashIndex, detailPageListingNumber.length());
 	}
 
 	/**
@@ -322,13 +370,28 @@ public class RealEstateJSoupParserExample {
 	/**
 	 * Save {@link Document} object (HTML content) to file.
 	 *
+	 * @param resultFile 		- result file to save
+	 * @param htmlDocument		- source HTML document
+	 *
+	 * @throws IOException -
+	 */
+	private static void saveHtmlPageToFile(File resultFile, Document htmlDocument) throws IOException {
+		BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(resultFile));
+		bufferedWriter.write(htmlDocument.outerHtml());
+
+		bufferedWriter.close();
+	}
+
+	/**
+	 * Save {@link Document} object (HTML content) to file.
+	 *
 	 * @param parentDirectory	- parent directory
 	 * @param fileName			- file name
 	 * @param htmlDocument		- source HTML document
 	 *
 	 * @throws IOException -
 	 */
-	private static void saveHtmlFile(File parentDirectory, String fileName, Document htmlDocument) throws IOException {
+	private static void saveHtmlPageToFile(File parentDirectory, String fileName, Document htmlDocument) throws IOException {
 		final File firstPageFile = new File(parentDirectory, fileName);
 
 		BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(firstPageFile));
